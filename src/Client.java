@@ -7,11 +7,14 @@
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.image.BufferedImage;
+import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.io.OutputStream;
 import java.io.PrintWriter;
 import java.net.Socket;
+import java.nio.ByteBuffer;
 import java.util.regex.Pattern;
 
 import javax.imageio.ImageIO;
@@ -108,7 +111,7 @@ public class Client {
              }
         } while (!checkPort(port));
         
-        // Checher la photo
+        // Get the photo photo
 		JFileChooser j = new JFileChooser();
 		FileFilter filter = new FileNameExtensionFilter("JPEG file", "jpg", "jpeg");
 	    j.setFileFilter(filter);
@@ -126,11 +129,20 @@ public class Client {
         
         Socket socket;
 		socket = new Socket(serverAddress, (int)port);
+		OutputStream outStream = socket.getOutputStream();
 		
         System.out.format("The capitalization server is running on %s:%d%n", serverAddress, port);
         
         in = ImageIO.read(new File(pathName));
-        ImageIO.write(in, "JPEG", socket.getOutputStream());
+        ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
+        
+        
+        ImageIO.write(in, "JPEG", byteArrayOutputStream);
+        
+        byte[] size = ByteBuffer.allocate(4).putInt(byteArrayOutputStream.size()).array();
+        outStream.write(size);
+        outStream.write(byteArrayOutputStream.toByteArray());
+        outStream.flush();
 //        out = new PrintWriter(socket.getOutputStream(), true);
 
         // Consume the initial welcoming messages from the server

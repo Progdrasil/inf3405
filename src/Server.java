@@ -4,17 +4,25 @@
 // Loyola Marymount University
 // http://cs.lmu.edu/~ray/notes/javanetexamples/
 
-import java.io.BufferedReader;
+import java.awt.Dimension;
+import java.awt.Graphics;
+import java.awt.Graphics2D;
+import java.awt.image.BufferedImage;
+import java.io.ByteArrayInputStream;
+import java.io.FileInputStream;
 import java.io.IOException;
-import java.io.InputStreamReader;
+import java.io.InputStream;
 import java.io.PrintWriter;
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.net.ServerSocket;
 import java.net.Socket;
+import java.nio.ByteBuffer;
 
+import javax.imageio.ImageIO;
 import javax.swing.JFrame;
 import javax.swing.JOptionPane;
+import javax.swing.JPanel;
 
 /**
  * A server program which accepts requests from clients to
@@ -90,22 +98,31 @@ public class Server {
                 // Decorate the streams so we can send characters
                 // and not just bytes.  Ensure output is flushed
                 // after every newline.
-                BufferedReader in = new BufferedReader(new InputStreamReader(socket.getInputStream()));
+            	InputStream inputStream = socket.getInputStream();
+            	
+            	byte[] sizeArr = new byte[4];
+            	inputStream.read(sizeArr);
+            	int size = ByteBuffer.wrap(sizeArr).asIntBuffer().get();
+            	
+            	byte[] imageArr = new byte[size];
+            	inputStream.read(imageArr);
+            	
+                BufferedImage in = ImageIO.read(new ByteArrayInputStream(imageArr));
+                BufferedImage sobel = Sobel.process(in);
+                
+                JFrame frame = new JFrame("Testing");
+                frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+                frame.add(new TestPane(sobel));
+                frame.pack();
+                frame.setLocationRelativeTo(null);
+                frame.setVisible(true);
+                
                 PrintWriter out = new PrintWriter(socket.getOutputStream(), true);
 
                 // Send a welcome message to the client.
                 out.println("Hello, you are client #" + clientNumber + ".");
                 out.println("Enter a line with only a period to quit\n");
 
-                // Get messages from the client, line by line; return them
-                // capitalized
-                while (true) {
-                    String input = in.readLine();
-                    if (input == null || input.equals(".")) {
-                        break;
-                    }
-                    out.println(input.toUpperCase());
-                }
             } catch (IOException e) {
                 log("Error handling client# " + clientNumber + ": " + e);
             } finally {
@@ -124,6 +141,30 @@ public class Server {
          */
         private void log(String message) {
             System.out.println(message);
+        }
+        
+        public class TestPane extends JPanel {
+
+            private BufferedImage img = null;
+
+            public TestPane(BufferedImage image) {
+                img = image;
+            }
+
+            @Override
+            public Dimension getPreferredSize() {
+                return img == null ? new Dimension(200, 200) : new Dimension(img.getWidth(), img.getHeight());
+            }
+
+            protected void paintComponent(Graphics g) {
+                super.paintComponent(g);
+                Graphics2D g2d = (Graphics2D) g.create();
+                if (img != null) {
+                    g2d.drawImage(img, 0, 0, this);
+                }
+                g2d.dispose();
+            }
+
         }
     }
 }
