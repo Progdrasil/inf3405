@@ -8,11 +8,7 @@ import java.awt.Dimension;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
 import java.awt.image.BufferedImage;
-import java.io.ByteArrayInputStream;
-import java.io.FileInputStream;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.PrintWriter;
+import java.io.*;
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.net.ServerSocket;
@@ -21,7 +17,6 @@ import java.nio.ByteBuffer;
 
 import javax.imageio.ImageIO;
 import javax.swing.JFrame;
-import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 
 /**
@@ -49,10 +44,12 @@ public class Server {
        
         int clientNumber = 0;
         
-        JFrame frame = new JFrame("Capitalize Server");
+        System.out.println("Welcome to the Server");
+        System.out.println("Enter IP Address of the Server: ");
         
-        // Get the server address from a dialog box.
-        String serverAddress = JOptionPane.showInputDialog(frame,"Enter IP Address of the Server:","Welcome to the Capitalization Program", JOptionPane.QUESTION_MESSAGE);
+        // Get the server address from a dialog box
+        BufferedReader br = new BufferedReader(new InputStreamReader(System.in));
+        String serverAddress = br.readLine();
         int port = 5000;
         
 		ServerSocket listener;
@@ -61,7 +58,7 @@ public class Server {
 		listener.setReuseAddress(true);
 		listener.bind(new InetSocketAddress(locIP, port));
 		
-        System.out.format("The capitalization server is running on %s:%d%n", serverAddress, port);
+        System.out.format("The server is running on %s:%d%n", serverAddress, port);
     
         try {
             while (true) {

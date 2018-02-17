@@ -4,28 +4,13 @@
 // Loyola Marymount University
 // http://cs.lmu.edu/~ray/notes/javanetexamples/
 
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
 import java.awt.image.BufferedImage;
-import java.io.ByteArrayOutputStream;
-import java.io.File;
-import java.io.IOException;
-import java.io.InputStreamReader;
-import java.io.OutputStream;
-import java.io.PrintWriter;
+import java.io.*;
 import java.net.Socket;
 import java.nio.ByteBuffer;
 import java.util.regex.Pattern;
 
 import javax.imageio.ImageIO;
-import javax.swing.JFileChooser;
-import javax.swing.JFrame;
-import javax.swing.JOptionPane;
-import javax.swing.JScrollPane;
-import javax.swing.JTextArea;
-import javax.swing.JTextField;
-import javax.swing.filechooser.FileFilter;
-import javax.swing.filechooser.FileNameExtensionFilter;
 
 /**
  * A simple Swing-based client for the capitalization server.
@@ -37,21 +22,21 @@ public class Client {
 
     private BufferedImage in;
     private PrintWriter out;
-    private JFrame frame = new JFrame("Capitalize Client");
-    private JTextField dataField = new JTextField(40);
-    private JTextArea messageArea = new JTextArea(8, 60);
+//    private JFrame frame = new JFrame("Capitalize Client");
+//    private JTextField dataField = new JTextField(40);
+//    private JTextArea messageArea = new JTextArea(8, 60);
 
     /**
      * Constructs the client by laying out the GUI and registering a
      * listener with the textfield so that pressing Enter in the
      * listener sends the textfield contents to the server.
      */
-    public Client() {
+    Client() {
 
         // Layout GUI
-        messageArea.setEditable(false);
-        frame.getContentPane().add(dataField, "North");
-        frame.getContentPane().add(new JScrollPane(messageArea), "Center");
+//        messageArea.setEditable(false);
+//        frame.getContentPane().add(dataField, "North");
+//        frame.getContentPane().add(new JScrollPane(messageArea), "Center");
 
         // Add Listeners
 //        dataField.addActionListener(new ActionListener() {
@@ -91,49 +76,46 @@ public class Client {
 	public void connectToServer() throws IOException {
 
         // Get the server address from a dialog box.
-    	String serverAddress = "";
+    	String serverAddress;
+    	System.out.println("Welcome to the Client");
+        BufferedReader br = new BufferedReader(new InputStreamReader(System.in));
     	do {
-            serverAddress = JOptionPane.showInputDialog(frame,"Enter IP Address of the Server:","Welcome to the Capitalization Program",JOptionPane.QUESTION_MESSAGE);
-            if(!checkIp(serverAddress)) {
-           	 JOptionPane.showMessageDialog(frame, "Ce que tu m'as donne n'est pas une addresse IP!", "Dialog",
-            	        JOptionPane.ERROR_MESSAGE);
+    	    System.out.println("Enter IP address of the Server: ");
+            serverAddress = br.readLine();
+            if(!isIp(serverAddress)) {
+                System.out.println("What you gave me is not an IP address! Please try again");
             }
-    	} while(!checkIp(serverAddress));
+    	} while(!isIp(serverAddress));
         
         // Get port number and verify between 5000 5050
-        int port = 0;
+        int port;
         do  {
-        	 String portStr = JOptionPane.showInputDialog(frame,"Enter the port of the Server (5000-5050):","Welcome to the Capitalization Program",JOptionPane.QUESTION_MESSAGE);;
-             port = Integer.parseInt(portStr);
-             if(!checkPort(port)) {
-            	 JOptionPane.showMessageDialog(frame, "Le port n'est pas entre 5000 et 5050", "Dialog",
-             	        JOptionPane.ERROR_MESSAGE);
-             }
-        } while (!checkPort(port));
+            System.out.println("Enter the port of the Server (5000-5050):");
+            String portStr = br.readLine();
+            port = Integer.parseInt(portStr);
+            if(!isPort(port)) {
+                System.out.println("The port is not between 5000 and 5050");
+            }
+        } while (!isPort(port));
         
         // Get the photo photo
-		JFileChooser j = new JFileChooser();
-		FileFilter filter = new FileNameExtensionFilter("JPEG file", "jpg", "jpeg");
-	    j.setFileFilter(filter);
-		Integer opt = j.showOpenDialog(frame);
 		String pathName = "";
+		System.out.println("Enter the path to the image you want to send: ");
 		try {
-			if(opt == JFileChooser.APPROVE_OPTION) {
-				pathName = j.getSelectedFile().getPath();
-				System.out.print(pathName);
-			}
+            pathName = br.readLine();
+            System.out.print(pathName);
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
-
+        File img = new File(pathName);
         
         Socket socket;
-		socket = new Socket(serverAddress, (int)port);
+		socket = new Socket(serverAddress, port);
 		OutputStream outStream = socket.getOutputStream();
 		
-        System.out.format("The capitalization server is running on %s:%d%n", serverAddress, port);
+        System.out.format("%nThe capitalization is running on %s:%d%n", serverAddress, port);
         
-        in = ImageIO.read(new File(pathName));
+        in = ImageIO.read(img);
         ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
         
         
@@ -151,13 +133,13 @@ public class Client {
 //        }
     }
     
-    private boolean checkIp(String IpAddr) {
+    private boolean isIp(String IpAddr) {
     	Pattern PATTERN = Pattern.compile(
     	        "^(([01]?\\d\\d?|2[0-4]\\d|25[0-5])\\.){3}([01]?\\d\\d?|2[0-4]\\d|25[0-5])$");
     	return PATTERN.matcher(IpAddr).matches();
     }
     
-    private boolean checkPort(int port) {
+    private boolean isPort(int port) {
     	return port >= 5000 && port <= 5050;
     }
 
@@ -166,9 +148,6 @@ public class Client {
      */
     public static void main(String[] args) throws Exception {
         Client client = new Client();
-        client.frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-        client.frame.pack();
-        client.frame.setVisible(true);
         client.connectToServer();
     }
 }
