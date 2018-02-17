@@ -22,47 +22,14 @@ public class Client {
 
     private BufferedImage in;
     private PrintWriter out;
-//    private JFrame frame = new JFrame("Capitalize Client");
-//    private JTextField dataField = new JTextField(40);
-//    private JTextArea messageArea = new JTextArea(8, 60);
 
     /**
      * Constructs the client by laying out the GUI and registering a
      * listener with the textfield so that pressing Enter in the
      * listener sends the textfield contents to the server.
      */
-    private Client() {
-
-        // Layout GUI
-//        messageArea.setEditable(false);
-//        frame.getContentPane().add(dataField, "North");
-//        frame.getContentPane().add(new JScrollPane(messageArea), "Center");
-
-        // Add Listeners
-//        dataField.addActionListener(new ActionListener() {
-//            /**
-//             * Responds to pressing the enter key in the textfield
-//             * by sending the contents of the text field to the
-//             * server and displaying the response from the server
-//             * in the text area.  If the response is "." we exit
-//             * the whole application, which closes all sockets,
-//             * streams and windows.
-//             */
-//            public void actionPerformed(ActionEvent e) {
-//                out.println(dataField.getText());
-//                   String response;
-//                try {
-//                    response = in.readLine();
-//                    if (response == null || response.equals("")) {
-//                          System.exit(0);
-//                      }
-//                } catch (IOException ex) {
-//                       response = "Error: " + ex;
-//                }
-//                messageArea.append(response + "\n");
-//                dataField.selectAll();
-////            }
-//        });
+    public Client() {
+        System.out.println("Welcome to the Client");
     }
 
     /**
@@ -77,7 +44,6 @@ public class Client {
 
         // Get the server address from a dialog box.
     	String serverAddress;
-    	System.out.println("Welcome to the Client");
         BufferedReader br = new BufferedReader(new InputStreamReader(System.in));
     	do {
     	    System.out.println("Enter IP address of the Server: ");
@@ -126,11 +92,6 @@ public class Client {
         outStream.write(byteArrayOutputStream.toByteArray());
         outStream.flush();
 //        out = new PrintWriter(socket.getOutputStream(), true);
-
-        // Consume the initial welcoming messages from the server
-//        for (int i = 0; i < 3; i++) {
-//            messageArea.append(in.readLine() + "\n");
-//        }
     }
     
     private boolean isIp(String IpAddr) {
