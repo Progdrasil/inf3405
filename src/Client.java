@@ -31,7 +31,7 @@ public class Client {
      * listener with the textfield so that pressing Enter in the
      * listener sends the textfield contents to the server.
      */
-    Client() {
+    private Client() {
 
         // Layout GUI
 //        messageArea.setEditable(false);
@@ -113,7 +113,7 @@ public class Client {
 		socket = new Socket(serverAddress, port);
 		OutputStream outStream = socket.getOutputStream();
 		
-        System.out.format("%nThe capitalization is running on %s:%d%n", serverAddress, port);
+        System.out.format("%nThe Server is running on %s:%d%n", serverAddress, port);
         
         in = ImageIO.read(img);
         ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
