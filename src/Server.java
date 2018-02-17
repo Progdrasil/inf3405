@@ -51,6 +51,19 @@ public class Server {
         BufferedReader br = new BufferedReader(new InputStreamReader(System.in));
         String serverAddress = br.readLine();
         int port = 5000;
+
+		csv db = new csv();
+		boolean success = false;
+		do {
+			// Login with credentials
+			System.out.println("Enter your username:");
+			String username = br.readLine();
+
+			System.out.println("Enter your password:");
+			String password = br.readLine();
+
+			success = db.login(username, password);
+		} while (!success);
         
 		ServerSocket listener;
 		InetAddress locIP = InetAddress.getByName(serverAddress);
@@ -68,6 +81,7 @@ public class Server {
             listener.close();
         }
     }
+
 
     /**
      * A private thread to handle capitalization requests on a particular
