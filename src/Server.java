@@ -110,6 +110,7 @@ public class Server {
                 // and not just bytes.  Ensure output is flushed
                 // after every newline.
             	InputStream inputStream = socket.getInputStream();
+				OutputStream outStream = socket.getOutputStream();
             	
             	byte[] sizeArr = new byte[4];
             	inputStream.read(sizeArr);
@@ -120,19 +121,21 @@ public class Server {
             	
                 BufferedImage in = ImageIO.read(new ByteArrayInputStream(imageArr));
                 BufferedImage sobel = Sobel.process(in);
-                
-                JFrame frame = new JFrame("Testing");
-                frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-                frame.add(new TestPane(sobel));
-                frame.pack();
-                frame.setLocationRelativeTo(null);
-                frame.setVisible(true);
-                
-                PrintWriter out = new PrintWriter(socket.getOutputStream(), true);
 
-                // Send a welcome message to the client.
-                out.println("Hello, you are client #" + clientNumber + ".");
-                out.println("Enter a line with only a period to quit\n");
+				// retourne image traiter
+				ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
+
+				// Transforme data de l'image a un stream
+				ImageIO.write(sobel, "JPEG", byteArrayOutputStream);
+
+				// Envoie data stream a travers socket
+				byte[] outSize = ByteBuffer.allocate(4).putInt(byteArrayOutputStream.size()).array();
+				outStream.write(outSize);
+				outStream.write(byteArrayOutputStream.toByteArray());
+				outStream.flush();
+
+				outStream.close();
+				inputStream.close();
 
             } catch (IOException e) {
                 log("Error handling client# " + clientNumber + ": " + e);
@@ -152,30 +155,6 @@ public class Server {
          */
         private void log(String message) {
             System.out.println(message);
-        }
-        
-        public class TestPane extends JPanel {
-
-            private BufferedImage img = null;
-
-            public TestPane(BufferedImage image) {
-                img = image;
-            }
-
-            @Override
-            public Dimension getPreferredSize() {
-                return img == null ? new Dimension(200, 200) : new Dimension(img.getWidth(), img.getHeight());
-            }
-
-            protected void paintComponent(Graphics g) {
-                super.paintComponent(g);
-                Graphics2D g2d = (Graphics2D) g.create();
-                if (img != null) {
-                    g2d.drawImage(img, 0, 0, this);
-                }
-                g2d.dispose();
-            }
-
         }
     }
 }

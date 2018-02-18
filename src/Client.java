@@ -4,10 +4,14 @@
 // Loyola Marymount University
 // http://cs.lmu.edu/~ray/notes/javanetexamples/
 
+import java.awt.*;
 import java.awt.image.BufferedImage;
 import java.io.*;
 import java.net.Socket;
 import java.nio.ByteBuffer;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.util.Arrays;
 import java.util.regex.Pattern;
 
 import javax.imageio.ImageIO;
@@ -21,7 +25,7 @@ import javax.imageio.ImageIO;
 public class Client {
 
     private BufferedImage in;
-    private PrintWriter out;
+    private BufferedImage out;
 
     /**
      * Constructs the client by laying out the GUI and registering a
@@ -63,35 +67,79 @@ public class Client {
                 System.out.println("The port is not between 5000 and 5050");
             }
         } while (!isPort(port));
-        
-        // Get the photo photo
-		String pathName = "";
-		System.out.println("Enter the path to the image you want to send: ");
-		try {
-            pathName = br.readLine();
-            System.out.print(pathName);
-		} catch (Exception e) {
-			e.printStackTrace();
-		}
-        File img = new File(pathName);
-        
+
+		// Create a socket
         Socket socket;
 		socket = new Socket(serverAddress, port);
 		OutputStream outStream = socket.getOutputStream();
-		
-        System.out.format("%nThe Server is running on %s:%d%n", serverAddress, port);
-        
-        in = ImageIO.read(img);
+		InputStream inStream = socket.getInputStream();
+
+		System.out.format("%nThe Server is running on %s:%d%n", serverAddress, port);
+
+		// Get the photo path
+		Path filePath = null;
+		System.out.println("Enter the path to the image you want to send: ");
+		try {
+			filePath = Paths.get(br.readLine());
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+
+		// Open the image
+		File img = null;
+		try {
+			img = filePath.toFile();
+		}
+		catch (NullPointerException e) {
+			e.printStackTrace();
+		}
+
+        // Read original image
+        out = ImageIO.read(img);
         ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
         
-        
-        ImageIO.write(in, "JPEG", byteArrayOutputStream);
-        
-        byte[] size = ByteBuffer.allocate(4).putInt(byteArrayOutputStream.size()).array();
-        outStream.write(size);
+        // Transform image data to stream
+        ImageIO.write(out, "JPEG", byteArrayOutputStream);
+
+        // Send image stream through socket
+        byte[] outSize = ByteBuffer.allocate(4).putInt(byteArrayOutputStream.size()).array();
+        outStream.write(outSize);
         outStream.write(byteArrayOutputStream.toByteArray());
         outStream.flush();
-//        out = new PrintWriter(socket.getOutputStream(), true);
+        System.out.println("The image has been sent to the server, awaiting response ...");
+
+        try {
+			// recois taille de l'image traiter
+			byte[] sizeArr = new byte[4];
+			inStream.read(sizeArr);
+			int inSize = ByteBuffer.wrap(sizeArr).asIntBuffer().get();
+
+			// recois image traiter
+			byte[] imageArr = new byte[inSize];
+			inStream.read(imageArr);
+
+			in = ImageIO.read(new ByteArrayInputStream(imageArr));
+		}
+		catch (IOException e) {
+        	e.printStackTrace();
+		}
+
+		// ajout de -sobel au nom du fichier
+		String[] fileName = filePath.getFileName().toString().split(".jpg");
+		StringBuilder sb = new StringBuilder();
+		sb.append(fileName[0]);
+		sb.append("-sobel");
+		sb.append(".jpg");
+		Path outPath = Paths.get(filePath.getParent().toString(), sb.toString());
+
+		// sauvegarde le fichier
+		ImageIO.write(in, "JPEG", new File(outPath.toString()));
+		System.out.format("The new image is saved at: %s%n", outPath.toString());
+
+		// ferme les stream et le socket
+		inStream.close();
+		outStream.close();
+		socket.close();
     }
     
     private boolean isIp(String IpAddr) {
