@@ -18,7 +18,6 @@ public class csv {
 
 		// return values
 		boolean status = false;
-		String text = "";
 
 		try {
 			if((csvFile = new File(file)).exists()){
@@ -39,10 +38,8 @@ public class csv {
 					status = true;
 				}
 				else if (range[pos + 1].equals(pass)) {
-					text = "Bienvenue " + range[pos];
 					status = true;
 				} else {
-					text = "Le mot de passe n'est pas valide!";
 					status = false;
 				}
 			}
@@ -58,7 +55,6 @@ public class csv {
 		}
 
 		// print message and return success status
-		System.out.println(text);
 		return status;
 	}
 

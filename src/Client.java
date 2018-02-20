@@ -4,14 +4,12 @@
 // Loyola Marymount University
 // http://cs.lmu.edu/~ray/notes/javanetexamples/
 
-import java.awt.*;
 import java.awt.image.BufferedImage;
 import java.io.*;
 import java.net.Socket;
 import java.nio.ByteBuffer;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.Arrays;
 import java.util.regex.Pattern;
 
 import javax.imageio.ImageIO;
@@ -26,6 +24,8 @@ public class Client {
 
     private BufferedImage in;
     private BufferedImage out;
+    private BufferedReader connectionStatus;
+    private PrintWriter login;
 
     /**
      * Constructs the client by laying out the GUI and registering a
@@ -68,13 +68,44 @@ public class Client {
             }
         } while (!isPort(port));
 
+        // login
+		System.out.println("Enter your username");
+		String user = br.readLine();
+
+		System.out.println("Enter your password");
+		String pass = br.readLine();
+
 		// Create a socket
         Socket socket;
 		socket = new Socket(serverAddress, port);
+		System.out.format("%nThe Server is running on %s:%d%n", serverAddress, port);
+
+		// pass username and password to server
+		login = new PrintWriter(socket.getOutputStream(), true);
+		connectionStatus = new BufferedReader(new InputStreamReader(socket.getInputStream()));
+
+		login.println(user);
+		login.println(pass);
+
+		String connectionResult = "";
+		try {
+			connectionResult = connectionStatus.readLine();
+		} catch (IOException e) {
+			e.printStackTrace();
+			System.out.println();
+		} finally {
+			if (connectionResult.contains("Erreur")) {
+				System.out.println(connectionResult);
+				socket.close();
+				return;
+			}
+
+			System.out.println(connectionResult);
+		}
+
+		// Pass image to socket
 		OutputStream outStream = socket.getOutputStream();
 		InputStream inStream = socket.getInputStream();
-
-		System.out.format("%nThe Server is running on %s:%d%n", serverAddress, port);
 
 		// Get the photo path
 		Path filePath = null;
@@ -83,7 +114,12 @@ public class Client {
 			filePath = Paths.get(br.readLine());
 		} catch (Exception e) {
 			e.printStackTrace();
+			socket.close();
+			return;
 		}
+
+		login.println(filePath.getFileName().toString());
+
 
 		// Open the image
 		File img = null;
